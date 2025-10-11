@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>📝 Деталі завдання</h1>
+
+  <h2>{{ task.name }}</h2>
+  <p><strong>Опис:</strong> {{ task.description|default:"(немає опису)" }}</p>
+
+  <p>
+    <strong>Пріоритет:</strong>
+    {{ task.get_priority_display }}
+    {% if task.priority == 'R' %}<span style="color:#d32f2f">●</span>{% endif %}
+    {% if task.priority == 'O' %}<span style="color:#f57c00">●</span>{% endif %}
+    {% if task.priority == 'Y' %}<span style="color:#fbc02d">●</span>{% endif %}
+    {% if task.priority == 'G' %}<span style="color:#388e3c">●</span>{% endif %}
+    {% if task.priority == 'B' %}<span style="color:#1976d2">●</span>{% endif %}
+  </p>
+
+  <p>
+    <strong>Дедлайн:</strong>
+    {% if task.deadline %}
+      {{ task.deadline|date:"d.m.Y H:i" }}
+      {% if task.is_expired and task.status != 'done' %}
+        <span style="color:#d32f2f">— прострочено ⏰</span>
+      {% endif %}
+    {% else %}
+      (не задано)
+    {% endif %}
+  </p>
+
+  <p><strong>Статус:</strong>
+    {% if task.status == 'done' %}
+      <span style="color: green;">{{ task.get_status_display }} ✅</span>
+    {% elif task.status == 'in_progress' %}
+      <span style="color: orange;">{{ task.get_status_display }} ⏳</span>
+    {% elif task.status == 'to_do' %}
+      <span style="color: #607d8b;">{{ task.get_status_display }} 🗒️</span>
+    {% elif task.status == 'on_hold' %}
+      <span style="color: #7b1fa2;">{{ task.get_status_display }} ⏸️</span>
+    {% elif task.status == 'canceled' %}
+      <span style="color: #b71c1c;">{{ task.get_status_display }} ❌</span>
+    {% elif task.status == 'expired' %}
+      <span style="color: #b71c1c;">{{ task.get_status_display }} ⏰</span>
+    {% else %}
+      {{ task.get_status_display }}
+    {% endif %}
+  </p>
+
+  <hr>
+
+  <h3>Коментарі</h3>
+  <ul>
+    {% for comment in task.comments.all %}
+      <li style="margin-bottom: 0.75rem;">
+        <div>
+          <strong>{{ comment.author|default:"Анонім" }}</strong>
+          <small style="color:#666;">— {{ comment.created_at|date:"d.m.Y H:i" }}</small>
+        </div>
+        <div>{{ comment.content|linebreaksbr }}</div>
+      </li>
+    {% empty %}
+      <li>(Коментарів поки немає)</li>
+    {% endfor %}
+  </ul>
+
+  <p><a href="{% url 'core:task_list' %}">← Назад до списку</a></p>
+{% endblock %}

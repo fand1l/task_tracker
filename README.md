@@ -42,8 +42,6 @@ python manage.py runserver
 Після запуску відкрийте в браузері:
 ```
 http://localhost:8000
-# або
-http://localhost:5000
 ```
 
 ## Структура проєкту (приклад)

@@ -27,7 +27,7 @@ macOS/Linux:
 source .venv/bin/activate
 ```
 
-3) Встановіть залежності (якщо є requirements.txt)
+3) Встановіть залежності
 ```bash
 pip install -r requirements.txt
 ```

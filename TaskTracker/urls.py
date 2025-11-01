@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth.views import LogoutView
+from core.views import RegisterView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path("", include("core.urls", namespace="core"))
+    path("admin/", admin.site.urls),
+    path("", include("core.urls", namespace="tasks_app")),
+    path("accounts/register/", RegisterView.as_view(), name="register"),
+    path("accounts/", include("django.contrib.auth.urls")),  # login/logout/password views; шукають шаблони у templates/registration/
 ]

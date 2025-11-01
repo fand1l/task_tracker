@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Видалити коментар{% endblock %}
+{% block content %}
+<div class="card border-danger">
+  <div class="card-body">
+    <h3 class="card-title text-danger">Підтвердження видалення</h3>
+    <p>Ви дійсно бажаєте видалити цей коментар?</p>
+    <div class="border rounded p-3 mb-3 bg-light">
+      {{ object.content|linebreaks }}
+      <div class="text-muted small mt-2">Автор: {{ object.author.username|default:"Видалений користувач" }} • {{ object.created_at|date:"Y-m-d H:i" }}</div>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-danger" type="submit">Так, видалити</button>
+      <a class="btn btn-outline-secondary" href="{% url 'core:task_detail' object.task.pk %}">Скасувати</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

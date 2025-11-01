@@ -1,12 +1,45 @@
 {% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}Редагувати задачу{% else %}Створити задачу{% endif %}{% endblock %}
 {% block content %}
-  <h1>➕ Створення завдання</h1>
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title mb-3">{% if form.instance.pk %}Редагувати задачу{% else %}Створити задачу{% endif %}</h3>
+    <form method="post">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Назва</label>
+          {{ form.name }}
+          {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Опис</label>
+          {{ form.description }}
+          {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Статус</label>
+          {{ form.status }}
+          {% if form.status.errors %}<div class="text-danger small">{{ form.status.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Пріоритет</label>
+          {{ form.priority }}
+          {% if form.priority.errors %}<div class="text-danger small">{{ form.priority.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Дедлайн</label>
+          {{ form.deadline }}
+          <div class="form-text">Формат: YYYY-MM-DD HH:MM (ваш локальний час)</div>
+          {% if form.deadline.errors %}<div class="text-danger small">{{ form.deadline.errors }}</div>{% endif %}
+        </div>
+      </div>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Зберегти</button>
-  </form>
-
-  <p><a href="{% url 'core:task_list' %}">← Назад до списку</a></p>
+      <div class="mt-4 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Зберегти</button>
+        <a class="btn btn-outline-secondary" href="{% url 'core:task_list' %}">Скасувати</a>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}

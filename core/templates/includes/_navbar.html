@@ -1,0 +1,32 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'core:task_list' %}">Task Manager</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Перемикач навігації">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="topNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="{% url 'core:task_list' %}">Список задач</a></li>
+        {% if user.is_authenticated %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'core:task_create' %}">Створити задачу</a></li>
+        {% endif %}
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <span class="navbar-text me-2">Привіт, {{ user.username }}!</span>
+          </li>
+          <li class="nav-item">
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button class="btn btn-outline-secondary btn-sm">Вийти</button>
+            </form>
+          </li>
+        {% else %}
+          <li class="nav-item"><a class="btn btn-outline-primary btn-sm me-2" href="{% url 'login' %}">Увійти</a></li>
+          <li class="nav-item"><a class="btn btn-primary btn-sm" href="{% url 'register' %}">Реєстрація</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>

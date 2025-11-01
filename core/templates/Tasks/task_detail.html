@@ -1,66 +1,81 @@
 {% extends "base.html" %}
+{% block title %}{{ task.name }}{% endblock %}
 {% block content %}
-  <h1>📝 Деталі завдання</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">{{ task.name }}</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'core:task_list' %}">До списку</a>
+    {% if user == task.creator %}
+      <a class="btn btn-primary" href="{% url 'core:task_update' task.pk %}">Редагувати</a>
+      <a class="btn btn-danger" href="{% url 'core:task_delete' task.pk %}">Видалити</a>
+    {% endif %}
+  </div>
+</div>
 
-  <h2>{{ task.name }}</h2>
-  <p><strong>Опис:</strong> {{ task.description|default:"(немає опису)" }}</p>
-
-  <p>
-    <strong>Пріоритет:</strong>
-    {{ task.get_priority_display }}
-    {% if task.priority == 'R' %}<span style="color:#d32f2f">●</span>{% endif %}
-    {% if task.priority == 'O' %}<span style="color:#f57c00">●</span>{% endif %}
-    {% if task.priority == 'Y' %}<span style="color:#fbc02d">●</span>{% endif %}
-    {% if task.priority == 'G' %}<span style="color:#388e3c">●</span>{% endif %}
-    {% if task.priority == 'B' %}<span style="color:#1976d2">●</span>{% endif %}
-  </p>
-
-  <p>
-    <strong>Дедлайн:</strong>
-    {% if task.deadline %}
-      {{ task.deadline|date:"d.m.Y H:i" }}
-      {% if task.is_expired and task.status != 'done' %}
-        <span style="color:#d32f2f">— прострочено ⏰</span>
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="mb-2">
+      <span class="badge text-bg-secondary">{{ task.get_status_display }}</span>
+      <span class="badge text-bg-info">{{ task.get_priority_display }}</span>
+      {% if task.deadline %}
+        <span class="badge text-bg-light border">Дедлайн: {{ task.deadline|date:"Y-m-d H:i" }}</span>
+        {% if task.is_expired %}
+          <span class="badge text-bg-danger">Прострочено</span>
+        {% endif %}
       {% endif %}
-    {% else %}
-      (не задано)
-    {% endif %}
-  </p>
+    </div>
+    <p class="mb-0">{{ task.description|linebreaks }}</p>
+    <div class="text-muted small mt-2">Створив: {{ task.creator.username }}</div>
+  </div>
+</div>
 
-  <p><strong>Статус:</strong>
-    {% if task.status == 'done' %}
-      <span style="color: green;">{{ task.get_status_display }} ✅</span>
-    {% elif task.status == 'in_progress' %}
-      <span style="color: orange;">{{ task.get_status_display }} ⏳</span>
-    {% elif task.status == 'to_do' %}
-      <span style="color: #607d8b;">{{ task.get_status_display }} 🗒️</span>
-    {% elif task.status == 'on_hold' %}
-      <span style="color: #7b1fa2;">{{ task.get_status_display }} ⏸️</span>
-    {% elif task.status == 'canceled' %}
-      <span style="color: #b71c1c;">{{ task.get_status_display }} ❌</span>
-    {% elif task.status == 'expired' %}
-      <span style="color: #b71c1c;">{{ task.get_status_display }} ⏰</span>
-    {% else %}
-      {{ task.get_status_display }}
-    {% endif %}
-  </p>
-
-  <hr>
-
-  <h3>Коментарі</h3>
-  <ul>
-    {% for comment in task.comments.all %}
-      <li style="margin-bottom: 0.75rem;">
-        <div>
-          <strong>{{ comment.author|default:"Анонім" }}</strong>
-          <small style="color:#666;">— {{ comment.created_at|date:"d.m.Y H:i" }}</small>
+<h4 class="mb-3">Коментарі</h4>
+<div class="mb-4">
+  {% if comments %}
+    <div class="list-group">
+      {% for comment in comments %}
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between">
+            <div class="fw-semibold">
+              {{ comment.author.username|default:"Видалений користувач" }}
+              <span class="text-muted small">• {{ comment.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            {% if user.is_authenticated and comment.author == user %}
+              <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'core:comment_edit' comment.pk %}">Редагувати</a>
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'core:comment_delete' comment.pk %}">Видалити</a>
+              </div>
+            {% endif %}
+          </div>
+          <div class="mt-2">{{ comment.content|linebreaks }}</div>
         </div>
-        <div>{{ comment.content|linebreaksbr }}</div>
-      </li>
-    {% empty %}
-      <li>(Коментарів поки немає)</li>
-    {% endfor %}
-  </ul>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-light border">Поки що немає коментарів</div>
+  {% endif %}
+</div>
 
-  <p><a href="{% url 'core:task_list' %}">← Назад до списку</a></p>
+{% if user.is_authenticated %}
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Додати коментар</h5>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          {{ form.content.label_tag }}
+          {{ form.content }}
+          {% if form.content.errors %}
+            <div class="text-danger small">{{ form.content.errors }}</div>
+          {% endif %}
+        </div>
+        <button class="btn btn-primary" type="submit">Опублікувати</button>
+      </form>
+    </div>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    <a href="{% url 'login' %}?next={{ request.path }}">Увійдіть</a>, щоб додати коментар.
+  </div>
+{% endif %}
 {% endblock %}

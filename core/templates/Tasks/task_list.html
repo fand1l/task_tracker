@@ -1,25 +1,87 @@
 {% extends "base.html" %}
+{% block title %}Список задач{% endblock %}
 {% block content %}
-  <h1>📋 Список завдань</h1>
-
-  {% if tasks %}
-    <ul>
-      {% for task in tasks %}
-        <li>
-          <a href="{% url 'core:task_detail' task.id %}">
-            {{ task.name }}
-          </a>
-          {% if task.completed %}
-            ✅
-          {% else %}
-            ⏳
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>Поки що немає жодного завдання.</p>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <form class="d-flex" method="get">
+    <input type="search" name="q" value="{{ request.GET.q }}" class="form-control me-2" placeholder="Пошук за назвою або описом...">
+    <button class="btn btn-outline-primary" type="submit">Пошук</button>
+  </form>
+  <button class="btn btn-outline-secondary ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#filters" aria-expanded="false">
+    Фільтри
+  </button>
+  {% if user.is_authenticated %}
+    <a class="btn btn-primary" href="{% url 'core:task_create' %}">Нова задача</a>
   {% endif %}
+</div>
 
-  <p><a href="{% url 'core:task_create' %}">➕ Створити нове завдання</a></p>
+<div class="collapse mb-3" id="filters">
+  <div class="card card-body">
+    <form method="get" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Статус</label>
+        {{ filter_form.status }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Пріоритет</label>
+        {{ filter_form.priority }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Дата дедлайну</label>
+        {{ filter_form.deadline }}
+      </div>
+      <div class="col-md-3 d-flex align-items-end gap-2">
+        <button class="btn btn-primary" type="submit">Застосувати</button>
+        <a class="btn btn-outline-secondary" href="{% url 'core:task_list' %}">Скинути</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if tasks %}
+  <div class="row g-3">
+    {% for task in tasks %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title mb-1">
+              <a href="{% url 'core:task_detail' task.pk %}">{{ task.name }}</a>
+            </h5>
+            <div class="mb-2 small text-muted">Автор: {{ task.creator.username }}</div>
+            <div class="mb-2">
+              <span class="badge text-bg-secondary">{{ task.get_status_display }}</span>
+              <span class="badge text-bg-info">{{ task.get_priority_display }}</span>
+              {% if task.deadline %}
+                <span class="badge text-bg-light border">Дедлайн: {{ task.deadline|date:"Y-m-d H:i" }}</span>
+                {% if task.is_expired %}
+                  <span class="badge text-bg-danger">Прострочено</span>
+                {% endif %}
+              {% endif %}
+            </div>
+            <p class="card-text text-body-secondary flex-grow-1">
+              {{ task.description|truncatewords:25 }}
+            </p>
+            <div class="d-flex gap-2 mt-2">
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:task_detail' task.pk %}">Деталі</a>
+              {% if user == task.creator %}
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'core:task_update' task.pk %}">Редагувати</a>
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'core:task_delete' task.pk %}">Видалити</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  {% if request.GET.q or request.GET.status or request.GET.priority or request.GET.deadline %}
+    <div class="alert alert-info">Завдання не знайдено</div>
+  {% else %}
+    <div class="alert alert-secondary">
+      Поки немає жодного завдання.
+      {% if user.is_authenticated %}
+        <a href="{% url 'core:task_create' %}">Створіть перше</a>.
+      {% endif %}
+    </div>
+  {% endif %}
+{% endif %}
 {% endblock %}

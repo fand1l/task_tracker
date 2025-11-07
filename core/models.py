@@ -43,6 +43,20 @@ class Task(models.Model):
     @property
     def is_expired(self) -> bool:
         return self.deadline and self.deadline < timezone.now() # True, якщо дедлайн заданий і вже минув
+    
+
+class TaskImage(models.Model):
+    """Images attached to a Task"""
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
+    image = models.ImageField(upload_to='task_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.task.name} ({self.pk})"
 
 
 class Comment(models.Model):

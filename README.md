@@ -74,13 +74,6 @@ Contributions are welcome!
    - Changes
    - Screenshots (if UI affected)
 
-### Ideas / Possible Enhancements
-- Task categories or tags
-- Simple search bar
-- Dark mode
-- Export/import tasks (JSON)
-- Priority flag
-
 If you start one of these, mention it in your PR.
 
 ## License

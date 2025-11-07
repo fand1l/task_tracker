@@ -8,8 +8,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 
-from core.forms import TaskForm, TaskFilterForm, CommentForm
-from core.models import Task, Comment
+from core.forms import TaskForm, TaskFilterForm, CommentForm, TaskImageForm
+from core.models import Task, Comment, TaskImage
 from core.mixins import UserIsOwnerMixin
 
 
@@ -20,14 +20,11 @@ class TaskListView(ListView):
 
     def get_queryset(self):
         queryset = Task.objects.all()
-
-        # Фільтр
         form = TaskFilterForm(self.request.GET)
         if form.is_valid():
             status = form.cleaned_data.get("status")
             priority = form.cleaned_data.get("priority")
             deadline = form.cleaned_data.get("deadline")
-
             if status:
                 queryset = queryset.filter(status=status)
             if priority:
@@ -35,22 +32,18 @@ class TaskListView(ListView):
             if deadline:
                 queryset = queryset.filter(deadline__date=deadline)
 
-        # Пошук
         query = self.request.GET.get("q", "")
         if query:
             queryset = queryset.filter(
                 Q(name__icontains=query) | Q(description__icontains=query)
             )
-
         return queryset.order_by("-id")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter_form"] = TaskFilterForm(self.request.GET or None)
-
         context["is_filtered"] = any(
-            self.request.GET.get(param)
-            for param in ("q", "status", "priority", "deadline")
+            self.request.GET.get(param) for param in ("q", "status", "priority", "deadline")
         )
         return context
 
@@ -64,6 +57,7 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["comments"] = self.object.comments.all().order_by("-created_at")
         context["form"] = CommentForm()
+        context["images"] = self.object.images.all().order_by("-uploaded_at")
         return context
 
     def post(self, request, *args, **kwargs):
@@ -86,9 +80,17 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
     form_class = TaskForm
     success_url = reverse_lazy("core:task_list")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["image_form"] = TaskImageForm()
+        return context
+
     def form_valid(self, form):
         form.instance.creator = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        for f in self.request.FILES.getlist("images"):
+            TaskImage.objects.create(task=self.object, image=f)
+        return response
 
 
 class TaskUpdateView(LoginRequiredMixin, UserIsOwnerMixin, UpdateView):
@@ -97,17 +99,23 @@ class TaskUpdateView(LoginRequiredMixin, UserIsOwnerMixin, UpdateView):
     template_name = "Tasks/task_form.html"
     success_url = reverse_lazy("core:task_list")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["image_form"] = TaskImageForm()
+        context["existing_images"] = self.object.images.all().order_by("-uploaded_at")
+        return context
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form()
-
         if form.is_valid():
             task = form.save()
+            for f in request.FILES.getlist("images"):
+                TaskImage.objects.create(task=task, image=f)
             messages.success(self.request, f"Задача '{task.name}' успішно оновлена")
             return redirect(self.success_url)
-        else:
-            messages.error(self.request, "Не вдалося оновити задачу")
-            return self.render_to_response(self.get_context_data(form=form))
+        messages.error(self.request, "Не вдалося оновити задачу")
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class TaskDeleteView(LoginRequiredMixin, UserIsOwnerMixin, DeleteView):

@@ -24,14 +24,12 @@ class TaskFilterForm(forms.Form):
         label="Статус",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
-
     priority = forms.ChoiceField(
         choices=[("", "All")] + list(Task.Priority.choices),
         required=False,
         label="Пріоритет",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
-
     deadline = forms.DateField(
         required=False,
         label="Дата дедлайну",
@@ -48,3 +46,17 @@ class CommentForm(forms.ModelForm):
                 attrs={"rows": 3, "placeholder": "Напишіть коментар", "class": "form-control"}
             ),
         }
+
+
+class MultiFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class TaskImageForm(forms.Form):
+    images = forms.ImageField(
+        required=False,
+        widget=MultiFileInput(attrs={"class": "form-control", "multiple": True})
+    )
+
+    def clean_images(self):
+        return self.cleaned_data.get("images")

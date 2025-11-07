@@ -4,7 +4,7 @@
 <div class="card">
   <div class="card-body">
     <h3 class="card-title mb-3">{% if form.instance.pk %}Редагувати задачу{% else %}Створити задачу{% endif %}</h3>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <div class="row g-3">
         <div class="col-md-6">
@@ -33,6 +33,25 @@
           <div class="form-text">Формат: YYYY-MM-DD HH:MM (ваш локальний час)</div>
           {% if form.deadline.errors %}<div class="text-danger small">{{ form.deadline.errors }}</div>{% endif %}
         </div>
+
+        <div class="col-md-12">
+          <label class="form-label">Зображення</label>
+          {{ image_form.images }}
+          <div class="form-text">Можна обрати кілька файлів (JPEG/PNG/GIF).</div>
+        </div>
+
+        {% if existing_images %}
+        <div class="col-12">
+          <label class="form-label">Наявні зображення</label>
+          <div class="d-flex flex-wrap gap-2">
+            {% for img in existing_images %}
+              <div class="border rounded p-1">
+                <img src="{{ img.image.url }}" alt="" class="img-thumbnail" style="max-height:140px;">
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
       </div>
 
       <div class="mt-4 d-flex gap-2">

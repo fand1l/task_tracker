@@ -29,6 +29,20 @@
   </div>
 </div>
 
+{% if images %}
+<div class="mb-4">
+  <h4 class="mb-2">Зображення</h4>
+  <div class="d-flex flex-wrap gap-2">
+    {% for img in images %}
+      <div class="border rounded p-1">
+        <img src="{{ img.image.url }}" alt="" class="img-thumbnail" style="max-height:200px;">
+        <div class="text-muted small mt-1">{{ img.uploaded_at|date:"Y-m-d H:i" }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 <h4 class="mb-3">Коментарі</h4>
 <div class="mb-4">
   {% if comments %}
